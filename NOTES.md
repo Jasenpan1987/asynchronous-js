@@ -202,3 +202,28 @@ function eagerThunk(fn, ...args) {
 When we greate the thunk, the call of the passed in function will be immiditely executed.
 
 The best part of thunk is the time won't have impact on how we write the code.
+
+## 3. Promise
+
+Promise is a container that wrapped around on the future value. Promise un-invert the Inversion of Control problem.
+
+### 3.1 Promise Trust
+
+- Only resolved once
+- Either success or error
+- Messages passed / kept
+- Exceptions become errors
+- immutable once resolved <-
+
+### 3.2 Flow Control
+
+```js
+firstPromise()
+  .then(function() {
+    return secondPromise();
+  })
+  .then(function() {
+    return thirdPromise();
+  })
+  .then(complete, error);
+```
