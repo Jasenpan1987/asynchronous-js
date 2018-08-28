@@ -34,14 +34,29 @@ var p1 = getFile(files[0]);
 var p2 = getFile(files[1]);
 var p3 = getFile(files[2]);
 
-function outputAndReturnNext(nextPromise) {
-  return function(content) {
-    output(content);
-    return nextPromise;
+function lift(x) {
+  return function() {
+    return x;
   };
 }
 
-p1.then(outputAndReturnNext(p2))
-  .then(outputAndReturnNext(p3))
-  .then(outputAndReturnNext(new Promise(resolve => resolve("all done"))))
-  .then(output);
+p1.then(output)
+  .then(lift(p2))
+  .then(output)
+  .then(lift(p3))
+  .then(output)
+  .then(() => {
+    console.log("all done");
+  });
+
+// function outputAndReturnNext(nextPromise) {
+//   return function(content) {
+//     output(content);
+//     return nextPromise;
+//   };
+// }
+
+// p1.then(outputAndReturnNext(p2))
+//   .then(outputAndReturnNext(p3))
+//   .then(outputAndReturnNext(new Promise(resolve => resolve("all done"))))
+//   .then(output);

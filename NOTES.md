@@ -227,3 +227,54 @@ firstPromise()
   })
   .then(complete, error);
 ```
+
+In promise, don't overuse the arrow function and keep each `.then` doing one specific thing and pass it along, let the next `.then` to process the next part of logic.
+
+```js
+// good practice
+myPromise
+  .then(processFn1)
+  .then(processFn2)
+  .then(processFn3)
+  .catch(errorFn);
+```
+
+```js
+.catch(function(err) {
+  console.log(err)
+})
+
+// is equal to
+.then(null, function(err) {
+  console.log(err)
+})
+```
+
+### 3.3 Abstractions
+
+#### 3.3.1 Promise.all
+
+```js
+Promise.all([promise1, promise2, promise3]).then(function(results) {
+  return someTask(Math.max(results[1], results[2], results[3]));
+});
+```
+
+`Promise.all` will run in parallel, and return all the results in an array with all of the resolved values from the promise array.
+
+If any of them got rejected, all of them will send to the `.catch` block.
+
+#### 3.3.2 Promise.race
+
+```js
+Promise.race([
+  promise,
+  new Promise(function(_, reject) {
+    setTimeout(function() {
+      reject("Timeout");
+    }, 3000);
+  })
+]).then(successCallback, errorCallback);
+```
+
+`Promise.race` will run an array of promises, and if any of them success or rejected, it will directly send to the end `successFn` or `errorFn`.
