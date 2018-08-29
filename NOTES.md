@@ -278,3 +278,109 @@ Promise.race([
 ```
 
 `Promise.race` will run an array of promises, and if any of them success or rejected, it will directly send to the end `successFn` or `errorFn`.
+
+## 4. Generator
+
+Generator is a special kind of function that can be pause and resume as many time as necessary. While generator is paused, all the stuff in the generator is blocked, but the overall program is running without any block.
+
+```js
+function* gen() {
+  console.log("hello");
+  yield; // <- this is the pause
+  console.log("world");
+}
+
+var it = gen(); // gets back an iterator
+it.next(); // hello
+it.next(); // world
+```
+
+### 4.1 Messaging
+
+One way message passing
+
+```js
+function* main() {
+  yield 1;
+  yield 2;
+  yield 3;
+}
+
+var it = main();
+it.next(); // { value: 1, done: false }
+it.next(); // { value: 2, done: false }
+it.next(); // { value: 3, done: false }
+
+it.next(); // { value: undefined, done: true }
+```
+
+```js
+function* main() {
+  yield 1;
+  yield 2;
+  yield 3;
+  return 4;
+}
+
+var it = main();
+it.next(); // { value: 1, done: false }
+it.next(); // { value: 2, done: false }
+it.next(); // { value: 3, done: false }
+
+it.next(); // { value: 4, done: true }
+it.next(); // { value: undefined, done: true }
+```
+
+Two way message passing
+
+```js
+// a call helper
+function continueFn(g) {
+  var it = g();
+  return function() {
+    return it.next.apply(it, arguments);
+  };
+}
+
+var run = continueFn(function*() {
+  var x = 1 + (yield);
+  var y = 1 + (yield);
+  yield x + y;
+});
+
+run();
+run(3); // {value: undefined, done: false}
+run(4); // {value: undefined, done: false}
+run(); // {value: 9, done: true}
+```
+
+We don't have to finish the entire generator, once we have the value we need, we can simply leave it there and the gc will collect it. And sometime we can make our generator never finished, even we can make the call of an iterator wrapped inside a `while(true)` expression.
+
+And if we put the `yield` inside an expression, we need to wrap it inside a pair of brackets.
+
+### 4.2 Promise + Generator pattern
+
+`yield promise` and `resume generator` makes a circile.
+
+It covered by many libraries.
+
+```js
+function getData(d) {
+  return ASQ(function(done) {
+    setTimeout(function() {
+      done(d);
+    }, 1000);
+  });
+}
+
+ASQ()
+  .runner(function*() {
+    var x = 1 + (yield getData(10));
+    var y = 1 + (yield getData(20));
+    var answer = yield getData("Result is " + (x + y));
+    yield answer;
+  })
+  .val(function(answer) {
+    console.log(answer); // Result is 42
+  });
+```
