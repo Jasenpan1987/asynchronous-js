@@ -384,3 +384,37 @@ ASQ()
     console.log(answer); // Result is 42
   });
 ```
+
+Parallel vs Sequencial
+
+```js
+function getFile(file) {
+  return ASQ(function(done) {
+    fakeAjax(file, done);
+  });
+}
+
+// the following code will be running in sequencial
+
+ASQ().runner(function*() {
+  output(yield getFile("file1"));
+  output(yield getFile("file1"));
+  output(yield getFile("file1"));
+  output("complete");
+});
+
+// the following code will be running in parallel
+
+ASQ().runner(function*() {
+  var p1 = getFile("file1");
+  var p2 = getFile("file1");
+  var p3 = getFile("file1");
+
+  output(yield p1);
+  output(yield p2);
+  output(yield p3);
+  output("complete");
+});
+```
+
+If we want a generator to yield some promises, we can make the promise fires one by one if we put `yield` explicitly in front of the promise, and if we get the promise to fire first and save it into a variable and pass that variable to `yield`, the promises will run in parallel, but the output is still returned in sequencial.
