@@ -418,3 +418,51 @@ ASQ().runner(function*() {
 ```
 
 If we want a generator to yield some promises, we can make the promise fires one by one if we put `yield` explicitly in front of the promise, and if we get the promise to fire first and save it into a variable and pass that variable to `yield`, the promises will run in parallel, but the output is still returned in sequencial.
+
+## 5. Observable
+
+Most of the async programs are running in event maners.
+
+```js
+var p1 = new Promise(function(resolve, reject) {
+  $("#btn").click(function(e) {
+    var className = e.target.className;
+    if (/foobar/.test(className)) {
+      resolve(className);
+    } else {
+      reject();
+    }
+  });
+});
+
+// somewhere else of the program
+p1.then(function(className) {
+  console.log(className);
+});
+```
+
+The problem of the above code is the event only going to fired once!
+
+### 5.1 Rxjs
+
+```js
+var obs = Rx.Observable.fromEvent(btn, "click"); // make an observable
+
+obs
+  .map(function(e) {
+    return e.target.className;
+  })
+  .filter(function(className) {
+    return /foobar/.test(className);
+  })
+  .distinctUntilChanged() // only let the data come through if it is different than the previous data
+  .subscribe(function(dataArr) {
+    // the end of the event chain, everything become sync
+    var className = dataArr[1];
+    console.log(className);
+  });
+```
+
+We can think the observable as a stream, every event is like some data pop into the stream.
+
+(checkout rxmarbles)
