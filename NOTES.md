@@ -466,3 +466,68 @@ obs
 We can think the observable as a stream, every event is like some data pop into the stream.
 
 (checkout rxmarbles)
+
+## 6.CSP
+
+```js
+var ch = chan();
+
+function* process1() {
+  yield put(ch, "Hello");
+  var msg = yield take(ch);
+  console.log(msg);
+}
+
+function* process2() {
+  var greeting = yield take(ch);
+  yield put(ch, greeting + " world");
+  console.log("done");
+}
+
+// hello world
+// done
+```
+
+Both of the process 1 and process 2 are able to put and take message from / to the channel. In CSP, we don't have to put first and take, it can be in any order.
+
+```js
+csp.go(function*() {
+  while (true) {
+    yield csp.put(ch, Math.random());
+  }
+});
+
+csp.go(function*() {
+  while (true) {
+    yield csp.take(csp.timeout(500));
+    var num = yield csp.take(ch);
+    console.log(num);
+  }
+});
+```
+
+The first generator pushes a random number and stop until the second generator consumes it. The two generators communicate through a common channel `ch` which works like a pipe, allows these generators to push and take values. And the `while(true)` will not block each other from keep running.
+
+```js
+function fromEvent(el, eventType) {
+  var ch = csp.chan();
+  $(el).bind(eventType, function(e) {
+    csp.putAsync(ch, e);
+  });
+
+  return ch;
+}
+
+csp.go(function*() {
+  var ch = fromEvent(myElement, "mousemove");
+
+  while (true) {
+    var event = yield csp.take(ch);
+    console.log(event.clientX, event.clientY);
+  }
+});
+```
+
+The above code uses csp to bind a "mousemove" event on to an html element. Once the mouse moves, the `e` will be pushed into the channel and the generator on the other side will consume it and output the `clientX` and `clientY` on to the console.
+
+The main different between the observable pattern and csp is the **back pressure**, in csp, the stream will not be sent if no one on the otherside wants to take it, but in the observable pattern, the stream will always be sent and the source won't care about if someone is consume it or not.
